@@ -1,7 +1,7 @@
 # avalanche2
 
 ## About this file
-This is the readme file for my project hosted at (danieltuzes/avalanhe2)[https://github.com/danieltuzes/avalanche2]. This file is manually created by me and contains some description of this project.
+This is the readme file for my project hosted at [danieltuzes/avalanhe2](https://github.com/danieltuzes/avalanche2). This file is manually created by me and contains some description of this project.
 ## About this repo
 Here you can find my simulations programs and evaluation programs to analyize the data you get. I wrote these during my PhD years.
 ### names
