@@ -9,8 +9,6 @@ This project is called avalanche2, but there is no avalanche1 or avalanche, it h
 ## so many projects, folders and main files
 Here you can find all the folders listed with my programs therein. Each folder contains a program for specific purposes.
 
-  1: arithmetic: to make some basic operations on block_data objects stored in files, output is stored in files.
-  
-  1: avalanche2: The dislocation avalanche simulation program. It is based on the continuum model of dislocations in mean field approximation.
-  
-  2: correlation_integral: to calculate the correlation integrals of the initial point of dislocation avalanches
+  1. arithmetic: to make some basic operations on block_data objects stored in files, output is stored in files.
+  2. **avalanche2**: The dislocation avalanche simulation program. It is based on the continuum model of dislocations in mean field approximation.
+  2. correlation_integral: to calculate the correlation integrals of the initial point of dislocation avalanches
