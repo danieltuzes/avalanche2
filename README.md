@@ -25,3 +25,9 @@ Here you can find all the folders listed with my programs therein. Each folder c
 	* ssc_tau:	stress strain curve averaged at external stress values
 	* tau_g_sampl_DsG:	statistics of the lines of tau_g files sampled at strain values
 	* tau_g_sampl_tau:	statistics of the lines of tau_g files sampled at external stress values
+	
+References:
+1. Role of weakest links and system-size scaling in multiscale modeling of stochastic plasticity
+Péter Dusán Ispánovity, **Dániel Tüzes**, Péter Szabó, Michael Zaiser, and István Groma
+[Phys. Rev. B 95, 054108 – Published 9 February 2017](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.95.054108)
+2. **D. Tüzes**, M. Zaiser és P. D. Ispánovity, Disorder is good for you: The influence of local disorder on strain localization and ductility of strain softening materials, [Int. J. Fract. 205, 139 (2017)](https://link.springer.com/article/10.1007%2Fs10704-017-0187-1)
