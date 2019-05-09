@@ -26,7 +26,7 @@ Here you can find all the folders listed with my programs therein. Each folder c
 	* tau_g_sampl_DsG:	statistics of the lines of tau_g files sampled at strain values
 	* tau_g_sampl_tau:	statistics of the lines of tau_g files sampled at external stress values
 	
-References:
+## References:
 1. Role of weakest links and system-size scaling in multiscale modeling of stochastic plasticity
 Péter Dusán Ispánovity, **Dániel Tüzes**, Péter Szabó, Michael Zaiser, and István Groma
 [Phys. Rev. B 95, 054108 – Published 9 February 2017](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.95.054108)
