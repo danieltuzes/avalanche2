@@ -69,7 +69,7 @@ template <typename T> linvec<T> linvec<T>::operator+(const linvec<T>& toadd) con
 
 template <typename T> linvec<T>& linvec<T>::operator/=(double divisor)
 {
-	transform(element.begin(),element.end(),element.begin(),[divisor](T elemval){return elemval/divisor;});
+	transform(element.begin(),element.end(),element.begin(),[divisor](T elemval){return elemval/static_cast<T>(divisor);});
 	return *this;
 }
 

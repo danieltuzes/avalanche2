@@ -4,6 +4,9 @@
 
 basic_simVars::basic_simVars(int s, int seed, int fg, string fp) : s(s), seed(seed), fg(fg), fp(fp) {}
 
+evalPars::evalPars(param<int> s, int seed, param<int> fg, param<string> fp, param<int> st, param<int> se, param<string> fs) :
+	basic_simVars(s(), seed, fg(), fp()), st(st()), se(se()), fs(fs()) {}
+
 string fnameWp(string fname, int s, int seed, int fg, string fp, string fs)
 {
 	return fnameWp(fname, s, fg, fp, seed, seed, fs);
@@ -68,4 +71,9 @@ string fnameWp(string fname, int fg, string fp, int seedstart, int seedend, stri
 		fname_wp_stream << ".txt";
 
 	return fname_wp_stream.str();
+}
+
+string fnameWp(string fname, evalPars pars, string extra_fs)
+{
+	return fnameWp(fname, pars.fg, pars.fp, pars.st, pars.se, pars.fs + extra_fs);
 }

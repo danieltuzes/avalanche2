@@ -9,11 +9,16 @@ This project is called avalanche2, but there is no avalanche1 or avalanche, it h
 ## so many projects, folders and main files
 Here you can find all the folders listed with my programs therein. Each folder contains a program for specific purposes.
 
-1. arithmetic: to make some basic operations on block_data objects stored in files, output is stored in files.
-2. **avalanche2**: The dislocation avalanche simulation program. It is based on the continuum model of dislocations in mean field approximation.
-3. correlation_integral: to calculate the correlation integrals of the initial point of dislocation avalanches
-4. statistics: calculates the
+1. [arithmetic](https://github.com/danieltuzes/avalanche2/tree/master/arithmetic): to make some basic operations on block_data objects stored in files, output is stored in files.
+2. [**avalanche2**](https://github.com/danieltuzes/avalanche2/tree/master/avalanche2): The dislocation avalanche simulation program. It is based on the continuum model of dislocations in mean field approximation.
+3. [correlation_integral](https://github.com/danieltuzes/avalanche2/tree/master/correlation_integral): to calculate the correlation integrals of the initial point of dislocation avalanches
+3. [gen_utils](https://github.com/danieltuzes/avalanche2/tree/master/gen_utils): shared code over the solution
+3. [shape](https://github.com/danieltuzes/avalanche2/tree/master/shape): do calculation with the shape of the avalanches
+4. [statistics](https://github.com/danieltuzes/avalanche2/tree/master/statistics): calculates the
 	* av_p:	avalanche size distrubion for events with positive deformation value
+    * av_n:	avalanche size distrubion for events with negative deformation value
+    * av_poz_part:	avalanche size distrubion where in the size only the positive events are counted
+    * av_neg_part:	avalanche size distrubion where in the size only the positive events are counted
 	* av_s_av:	average avalanche size in each external stress intervals
 	* iDG:	the size of the deformation of the first ith avalanche
 	* iDG_av:	the sum and STD of the deformation of the first ith avalanche over different realizations; the ith line gives the property of the ith avalanche

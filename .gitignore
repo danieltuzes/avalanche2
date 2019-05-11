@@ -1,0 +1,19 @@
+﻿# latex
+*.pdf
+*.aux
+*.out
+*.log
+*.gz
+*.toc
+
+# c++ programming
+*.exe
+*.bsc
+*.ilk
+*.pdb
+*.tlog
+*.obj
+*.sbr
+*.idb
+.vs/*
+*.vssscc

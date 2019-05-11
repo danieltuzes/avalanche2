@@ -5,13 +5,12 @@
 #include "../for_gnuplot/for_gnuplot_utils.h"
 #include "../gen_utils/gen_math.h"
 #include "../gen_utils/gen_hist.h"
-#include "../shape/evaluate.h"
 #include "../gen_utils/gen_fnameWp.h"
 #include "../gen_utils/tau_g.h"
 #include "../gen_utils/teestream.h"
 
 
-template<typename T> bool size_stat_tofile(const evalPars& pars, const vector< hist<T> >& data, double tauIncr, string header, string extra_fs)
+template<typename T> bool size_stat_tofile(const evalPars& pars, const vector< hist<T> >& data, double tauIncr, string header, string extra_fs) // writes out the avalanche statistic results to files, handles only statistics in tau intervals
 {
 	ofstream av_file(fnameWp("tau_g", pars, extra_fs));
 	if (!av_file)
