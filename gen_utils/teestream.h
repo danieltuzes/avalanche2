@@ -25,7 +25,7 @@ private:
     
     virtual int_type overflow(int_type c)
     {
-        int_type const eof = traits::eof();
+        int_type const constexpr eof = traits::eof();
         
         if (traits::eq_int_type(c, eof))
         {

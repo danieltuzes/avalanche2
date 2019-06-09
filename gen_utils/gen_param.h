@@ -41,11 +41,15 @@ public:
 	basic_param()
 		: set(false), set_by_call(false), set_from_file(false), moded_by_prg(false), disabled(false), require(rq::optional) {}
 
-	basic_param(string ext_name)
-		: set(false), set_by_call(false), set_from_file(false), moded_by_prg(false), disabled(false), ext_name(ext_name) {}
+	basic_param(string ext_name) : basic_param()  //set the ext_name of the parameter, it is almost always used
+	{
+		this->ext_name = ext_name;
+	}
 
-	basic_param(string ext_name, rq require)
-		: set(false), set_by_call(false), set_from_file(false), moded_by_prg(false), disabled(false), ext_name(ext_name), require(require) {} //set the ext_name of the parameter
+	basic_param(string ext_name, rq require) : basic_param(ext_name)  //set the ext_name of the parameter and to note if it is required or not
+	{
+		this->require = require;
+	} 
 
 	/*virtual basic_param * copy() = 0;*/
 
@@ -119,21 +123,25 @@ public:
 	explicit param(string ext_name) :
 		basic_param(ext_name) {}
 
+
 	explicit param(string ext_name, paramcontainer& p) :
 		basic_param(ext_name) {p.push_back(this);} //declarator inheritance is not implemented in msvs2012
 
 	explicit param(string ext_name, paramcontainer& p, rq require) :
-		basic_param(ext_name, require) {p.push_back(this);} //declarator inheritance is not implemented in msvs2012
+		basic_param(ext_name, require), Val(paramtype()), defVal(paramtype())
+	{
+		p.push_back(this);
+	} //declarator inheritance is not implemented in msvs2012
 	
 	explicit param(string ext_name, paramcontainer& p, rq require, paramtype def_val) :
-		basic_param(ext_name, require)
+		basic_param(ext_name, require), Val(paramtype()), defVal(paramtype())
 	{
 		p.push_back(this);
 		setDefVal(def_val);
 	}
 
 	explicit param(string ext_name, paramcontainer& p, rq require, paramtype def_val, string fname) :
-		basic_param(ext_name, require) //set the paramter from a file
+		basic_param(ext_name, require), Val(paramtype()) //set the paramter from a file
 	{
 		p.push_back(this);
 		if(!setFromFile(fname))

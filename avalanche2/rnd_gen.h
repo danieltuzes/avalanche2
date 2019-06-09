@@ -32,8 +32,8 @@ class universal_rnd
 protected:
 	distribution distr;
 	string params;
-	double multiA; // the random number is multiplicated with this number
-	double multiB; // the random number is multiplicated with this number
+	double multiA; // the random number is multiplicated with this number, it effectively multiplies the average with multiA
+	double multiB; // the random number is multiplicated with this number, it effectively multiplies the average with multiB, with multiA can be used to create "double Weibull" distribution
 	double weight; // the weight for multiA so that multiA and multiB doesn't modify the average
 	std::mt19937 generator;
 	int seed;
@@ -145,7 +145,7 @@ protected:
 
 
 public:
-	universal_rnd(distribution type, string params, int seed) : distr(type), params(params), seed(seed), times_advanced(0), good(false)
+	universal_rnd(distribution type, string params, int seed) : distr(type), params(params), multiA(0), multiB(0), weight(1), seed(seed), times_advanced(0), good(false)
 	{
 		generator.seed(seed);
 		if (init_distr())
@@ -158,7 +158,7 @@ public:
 		return generator;
 	}
 
-	universal_rnd(string type_with_params, int seed) : seed(seed), times_advanced(0), good(false) //constructor delegating is not allowed in vs2012
+	universal_rnd(string type_with_params, int seed) : multiA(0), multiB(0), weight(1), seed(seed), times_advanced(0), good(false) //constructor delegating is not allowed in vs2012
 	{
 		string type_name(type_with_params);
 		replace(type_name.begin(),type_name.end(),'_',' ');
@@ -209,7 +209,7 @@ public:
 		string params_split(params);
 		replace(params_split.begin(), params_split.end(), '_', ' ');
 		stringstream params_stream(params_split);
-		double param;
+		double param = 0;
 		for (int i = 0; i < which; ++i)
 			params_stream >> param;
 		

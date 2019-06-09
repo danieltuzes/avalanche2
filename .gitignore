@@ -8,12 +8,27 @@
 
 # c++ programming
 *.exe
+*.obj
+*.cd
+*.dll
+*.exp
+*.lib
+
 *.bsc
+*.pch
 *.ilk
 *.pdb
 *.tlog
-*.obj
 *.sbr
 *.idb
-.vs/*
 *.vssscc
+*.vcxproj*
+*.vspscc
+*.pch
+
+*.deps
+*.cache
+*.lastbuildstate
+
+.vs/*
+test/*

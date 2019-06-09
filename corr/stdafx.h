@@ -5,31 +5,16 @@
 
 #pragma once
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <sstream>
-
 #include <cmath>
-#include <functional>
-#include <algorithm>
-#include <numeric>
-#include <complex>
-
+#include <iterator>
 #include <vector>
-#include <unordered_set>
 #include <string>
-#include <random>
-
 #include <cstring>
+#include <algorithm>
 #include <iomanip>
-#include <tuple>
-#include <ctime>
-#include <stdexcept>
-#include <type_traits>
-
-#ifdef _MSC_VER
-#include <crtdbg.h>
-#endif
-
+#include <memory>
 
 // TODO: reference additional headers your program requires here

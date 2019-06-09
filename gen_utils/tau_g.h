@@ -12,8 +12,8 @@ public:
 	double av_size_n;
 	int random_times;
 
-	tau_g_line();
 	tau_g_line(double tau_ext, double sG, double sGn, double av_size, double av_size_n, int random_times);
+	tau_g_line();
 	tau_g_line(string line);
 	tau_g_line(istream& i);
 

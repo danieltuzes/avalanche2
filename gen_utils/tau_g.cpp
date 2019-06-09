@@ -3,10 +3,11 @@
 
 using namespace std;
 
-tau_g_line::tau_g_line() {}
+
 tau_g_line::tau_g_line(double tau_ext, double sG, double sGn, double av_size, double av_size_n, int random_times)
 	: tau_ext(tau_ext), sG(sG), sGn(sGn), av_size(av_size), av_size_n(av_size_n), random_times(random_times) {}
 
+tau_g_line::tau_g_line() : tau_g_line(0, 0, 0, 0, 0, 0) {}
 
 tau_g_line::tau_g_line(istream& s)
 {

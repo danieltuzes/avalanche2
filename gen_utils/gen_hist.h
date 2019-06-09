@@ -17,7 +17,7 @@ enum scale
 {
 	linear,      //equally distributed
 	logarithmic, //equally distributed
-	quasi_log   //distributed in such a way to comfortly store integer data
+	quasi_log   //distributed in such a way to comfortly store integer data, the delimiters are always half-integers, e.g.: 0.5-1.5, 1.5-2.5, 2.5-4.5, ... etc
 };
 
 ostream& operator<<(ostream& o, scale s)
@@ -49,7 +49,7 @@ template <> string param<scale>::getValType() {return "scale";}
 #pragma endregion
 
 
-template <typename T> class accum
+template <typename T> class accum // how many times have changed, what is the sum
 {
 protected:
 	unsigned long int counter;
@@ -105,7 +105,7 @@ public:
 		return ub;
 	}
 
-	linvec<double> range() const
+	linvec<double> range() const // returns a 2 element long linvec with lb and ub
 	{
 		vector<double> basic_ret;
 		basic_ret.push_back(lb);
@@ -133,31 +133,31 @@ public:
 };
 
 
-template <typename T> class hist
+template <typename T> class hist // stores 1D histograms of values with type T
 {
 protected:
-	double lb;
-	double incr;
-	double ub;
-	int size;
-	vector<bin<T>> m_bins;
-	scale m_scale;
-	double logIncr;
+	double lb; //the lower boundary of the histogram domain
+	double incr; // the width of the bins in case of linear scale
+	double ub; //the upper boundary of the histogram domain
+	int size; // the number of bins
+	vector<bin<T>> m_bins; // the array of the bins; a bin contain its lb, ub, how many times it has been modified and the total value
+	scale m_scale; // linear, logarithmic or quasi-logarithmic
+	double logIncr; // the log of the quotient
 	double logLb; // to calculate only once and store log(lb)
-	bool printAv;
-	bool cumulative;
+	bool printAv; // to print out the average in case the values are streamed out
+	bool cumulative; //
 	bool is_prop;
 
 public:
-	hist() {};
+	hist() : lb(0), incr(0), ub(0), size(0), m_scale(scale::linear), logIncr(0), logLb(0), printAv(false), cumulative(false), is_prop(false) {};
 	hist(double lb, double ub, scale m_scale, int size, T data):
-		lb(lb), ub(ub), size(size), m_scale(m_scale), printAv(false), cumulative(false), is_prop(false)
+		lb(lb), ub(ub), size(size), m_scale(m_scale), logIncr(0), logLb(0), printAv(false), cumulative(false), is_prop(false)
 	{
 		if (m_scale == scale::linear)
 		{
 			incr = (ub-lb) / size;
 			for (int i=0; i<size; ++i)
-				m_bins.push_back(bin<T>(lb + i*incr, lb + (i+1)*incr,data));
+				m_bins.push_back(bin<T>(lb + i * incr, lb + (i + 1) * incr, data));
 		}
 		else //m_scale == scale::logarithmic || m_scale == scale::quasi_log must hold
 		{
@@ -166,7 +166,7 @@ public:
 			if (m_scale == scale::quasi_log)
 				ub += 0.5; //otherwise value at the upper border will be out of range
 
-			incr = pow(ub/lb,1./size);
+			incr = pow(ub/lb,1./size); // the quotient
 			logIncr = log(incr);
 			logLb = log(lb);
 			if (m_scale == scale::logarithmic)

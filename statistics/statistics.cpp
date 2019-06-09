@@ -20,14 +20,14 @@ template<typename T> bool size_stat_tofile(const evalPars& pars, const vector< h
 	}
 	cout << "Writing " << fnameWp("tau_g", pars, extra_fs) << endl;
 
-	av_file << "# This file contains information on avalanche size. Avalanches in each size intervals are counted at different external stress (tau) values." << endl
-		<< "# The first non-commented line is the total count in that stress-range." << endl
+	av_file << "# This file contains information on avalanche size. Avalanches in each size intervals are counted at different external stress (tau) or DsG values." << endl
+		<< "# The first non-commented line is the total count in that stress or deformation range." << endl
 		<< header
 		<< "# "
 		<< "size: bin_min(1)\t" // header
 		<< "bin_max(2)\t"
-		<< "count in tau:";
-	for (size_t j = 0; j < data.size(); ++j)
+		<< "count in range:";
+	for (int j = 0; j < static_cast<int>(data.size()); ++j)
 		av_file << j*tauIncr << "-" << (j + 1)*tauIncr << "(" << j + 3 << ")\t";
 	av_file << endl;
 
@@ -77,12 +77,13 @@ int main(int argc, char* argv[])
 	param<double> sc("springConstant", p, rq::optional, 0); // to chose the decreasement of the external stress after a deformation
 	param<bool> totStrain("totStrain", p, rq::optional, false); // if the program should calculate and plot the total strain (elastic+plastic): get_tau_ext() / springConstant is added to every sG-sGn values when reading in tau_g file files
 	param<int> tauIntervalsAvStat("tauIntervalsAvStat", p, rq::optional, 10); // number of tau intervals to make avalanche statistics
-	param<double> tauIncrAvStat("tauIncrAvStat", p, rq::optional, 1); // how big should a tau_ext range be while sorting the avalanches for avalanche size distribution
+	param<int> DsGIntervalsAvStat("DsGIntervalsAvStat", p, rq::optional, 10); // number of DsG intervals to make avalanche statistics
+	param<double> tauIncrAvStat("tauIncrAvStat", p, rq::optional, 1); // how big a tau_ext range should be while sorting the avalanches for avalanche size distribution
 	param<int> tauIntervalsAvAvSize("tauIntervalsAvAvSize", p, rq::optional, 10); // the number of x coord points of the average (av_size - av_size_n) - tau_ext plot
 	param<double> tauIncrAvAvSize("tauIncrAvAvSize", p, rq::optional, 1); // the x coord increment of the average (av_size - av_size_n) - tau_ext plot
 	param<int> sizeIntervals("sizeIntervals", p, rq::optional, 100); // number of avalanche-size intervals to make statistics
 	param<bool> allowStressDecreasing("allowStressDecreasing", p, rq::optional, false); // skip checking increasing external stress
-	param<string> DsGfname("DG_list_fname", p, rq::optional, "DG_list.txt"); // program creates a tau_ext list and the number of needed avalanches right after the given average deformation values read from the file
+	param<string> DsGfname("DG_list_fname", p, rq::optional, "DG_list.txt"); // for each DsG values stored in the named file, the program creates a list of tau_ext values measured right after the reached DsG values, and the index of the avalanche with which it has been reached
 	param<scale> sizeScale("sizeScale", p, rq::optional, scale::quasi_log); //scale of the histograms of the avalances sizes (av_size, av_size_n, av_size - av_size_n for positive values, av_size - av_size_n for negative values)
 	param<double> factor("avFactor", p, rq::optional, 1); // multiply the avalanche size with this value. ***This modifies the statistical results!***
 	param<double> minAvSize("minAvSize", p, rq::optional, 0.5); // for the size distribution what should be the lower limit of sizes; for logarithmic scaling it could be important
@@ -95,7 +96,7 @@ int main(int argc, char* argv[])
 	param<double> sscLB("sscLB", p, rq::optional, 0.5); // the lower boundary for logscale
 	param<int> workUnit("workUnit", p, rq::optional, 1000); // number of files that represents the data range for the evaluation; too big value may cause unsufficient memory error. The program pre-reads this amount of files to calculate the correct values for the histograms - if requested via parameters
 	param<int> iav("ithAvalanche", p, rq::optional, 0); //if set, the program makes 2 x iav number of columns that stores the external stress list at the ith avalanche and the avalanche size (ies and iDG_list, the first is in simulation order, the second is in ascending order
-	param<int> onlyFirstN("onlyFirstN", p, rq::optional, 0); //if bigger than 0 is set, only the first N will be considered. Note: the first avalanche is always 0 big.
+	param<int> onlyFirstN("onlyFirstN", p, rq::optional, 0); //if bigger than 0 is set, only the first N will be considered. Note: the size of the first avalanche is always 0.
 	param<int> skipFirstN("skipFirstN", p, rq::optional, 0); // the first N lines will be ignored. Useful if you'd like to skip the 0 sized avalanche or in thermal activation
 	param<bool> createPozStat("createPozStat", p, rq::optional, false); //if the program should create or not tau_n, tau_neg_part, tau_poz_part
 	param<bool> createExtraStat("createExtraStat", p, rq::optional, false); //if the program should create or not tau_n, tau_neg_part, tau_poz_part
@@ -138,17 +139,16 @@ int main(int argc, char* argv[])
 
 #pragma region define variables
 	
-	vector<vector<tau_g_line>> tau_g_data; //every line stores the whole content of a tau_g file
-	tau_g_line tau_g_zero(0, 0, 0, 0, 0, 0);
-	tau_g_line mixed_largest = tau_g_zero; //to store the biggest different values of the tau_g files
+	vector<vector<tau_g_line>> tau_g_data; //every element stores the whole content of a tau_g file
+	tau_g_line mixed_largest; //to store the largest values of the tau_g files (both tau_ext, sG, sGn, av_size, av_size_n, rand_gen.getTimesAdvanced()
 	accum<double> av_size_av(0); //to store the average avalanche size; to create histograms in the good range
 	accum<double> av_size_n_av(0); 
 
 	hist<tau_g_line> tau_g_sampl_DsG; //sampling the tau_g files at DsG values
 	hist<tau_g_line> tau_g_sampl_tau; //sampling the tau_g files at external stress values
 
-	vector<double> DsGlist;
-	if (DsGfname.setByUsr())
+	vector<double> DsGlist; 
+	if (DsGfname.setByUsr()) // reading in the DsG values at which the external stress values and the the index of the avalanche will be investigated
 	{
 		ifstream DsGtelf(DsGfname());
 		if (!DsGtelf)
@@ -168,11 +168,14 @@ int main(int argc, char* argv[])
 	hist<double> ssc_DsG, //sampling the external stress curve at DsG; takes into account sc and totStrain
 		// ssc_tau, //sampling the stress-strain curve at external stress values, does not take into account sc and totStrain
 		ssc_DsGSq; //to calculate the deviation of the external stress
-	vector<hist<double>> av_p, //to store the statistics of the avalanches if it is positive
-		av_n, //if it is negative
-		av_poz_part, //to store only the positive part
-		av_neg_part; //to store only the negative part
+	vector<hist<double>> av_p, //to store the statistics of the avalanche sizes if it is positive, for each tau_ext intervals
+		av_p_DsG, //to store the statistics of the avalanche sizes if it is positive, for each DsG intervals
+		av_n, //if it is negative, for each tau_ext intervals
+		av_poz_part, //to store only the positive part, for each tau_ext intervals
+		av_neg_part; //to store only the negative part, for each tau_ext intervals
 	vector<accum<double>> average_av_size; //in different stress-intervals
+
+	double DsGIncrAvStat; // how wide a DsG interval should be; will be calculated as the largest DsG / number of intervals
 
 	int i_counter = 0; // the number of files read in
 	int p_counter = 0; // the number of processed files; good to know while debugging and it is also printed out at the end
@@ -251,6 +254,8 @@ int main(int argc, char* argv[])
 			}
 			else
 				tauIncrAvStat.setDefVal(nextafter(mixed_largest.tau_ext / tauIntervalsAvStat(), DINFTY));
+			
+			DsGIncrAvStat = nextafter(mixed_largest.DsG() / DsGIntervalsAvStat(), DINFTY);
 
 			if (tauIncrAvAvSize.setByUsr())
 			{
@@ -290,7 +295,7 @@ int main(int argc, char* argv[])
 					cout << "Def val of sscIncr has been set to " << sscIncr() << endl;
 				}
 				
-				tau_g_sampl_DsG = hist<tau_g_line>(0, sscRes()*sscIncr(), scale::linear, sscRes(), tau_g_zero);
+				tau_g_sampl_DsG = hist<tau_g_line>(0, sscRes()*sscIncr(), scale::linear, sscRes(), tau_g_line());
 				ssc_DsG = hist<double>(0, sscRes()*sscIncr(), scale::linear, sscRes(), 0);
 				ssc_DsGSq = hist<double>(0, sscRes()*sscIncr(), scale::linear, sscRes(), 0);
 			}
@@ -306,15 +311,16 @@ int main(int argc, char* argv[])
 					sscIncr.setDefVal(pow(nextafter(!totStrain() ? mixed_largest.DsG() : mixed_largest.tDsG(sc()), DINFTY) / sscLB(), 1. / sscRes()));
 					cout << "Def val of sscIncr has been set to " << sscIncr() << endl;
 				}
-				tau_g_sampl_DsG = hist<tau_g_line>(sscLB(), sscLB()*pow(sscIncr(), sscRes()), sscScale(), sscRes(), tau_g_zero);
+				tau_g_sampl_DsG = hist<tau_g_line>(sscLB(), sscLB()*pow(sscIncr(), sscRes()), sscScale(), sscRes(), tau_g_line());
 				ssc_DsG = hist<double>(sscLB(), sscLB()*pow(sscIncr(), sscRes()), sscScale(), sscRes(), 0);
 				ssc_DsGSq = hist<double>(sscLB(), sscLB()*pow(sscIncr(), sscRes()), sscScale(), sscRes(), 0);
 			}
 
-			tau_g_sampl_tau = hist<tau_g_line>(0, nextafter(mixed_largest.tau_ext, DINFTY), scale::linear, sscTauRes(), tau_g_zero);
+			tau_g_sampl_tau = hist<tau_g_line>(0, nextafter(mixed_largest.tau_ext, DINFTY), scale::linear, sscTauRes(), tau_g_line());
 			// ssc_tau = hist<double>(0, nextafter(mixed_largest.tau_ext, DINFTY), scale::linear, sscTauRes(), 0);
 			
 			av_p = vector<hist<double>>(tauIntervalsAvStat, hist<double>(minAvSize, maxAvSize, sizeScale, sizeIntervals, 0));
+			av_p_DsG = vector<hist<double>>(DsGIntervalsAvStat, hist<double>(minAvSize, maxAvSize, sizeScale, sizeIntervals, 0));
 			av_n = vector<hist<double>>(tauIntervalsAvStat, hist<double>(minAvSize, maxAvSize_n, sizeScale, sizeIntervals, 0));
 			av_poz_part = vector<hist<double>>(tauIntervalsAvStat, hist<double>(minAvSize, maxAvSize, sizeScale, sizeIntervals, 0));
 			av_neg_part = vector<hist<double>>(tauIntervalsAvStat, hist<double>(minAvSize, maxAvSize_n, sizeScale, sizeIntervals, 0));
@@ -326,7 +332,9 @@ int main(int argc, char* argv[])
 
 		for (auto tau_g_list : tau_g_data)
 		{
-			int tauStatIntervalId = 0, tauSizeIntervalId = 0;
+			int tauStatIntervalId = 0, // in which tau_ext interval the iterator is for the avalanche size statistics
+				tauSizeIntervalId = 0, // in which tau_ext interval the iterator is for the average avalanche size
+				DsGStatIntervalId = 0; // in which DsG interval the iterator is for the avalanche size statistics
 			int DsG_index = 0;
 			int tau_index = 0;
 			int which_DsG4tau_extList = 0;
@@ -334,9 +342,9 @@ int main(int argc, char* argv[])
 			{
 				if (DsGfname.setByUsr())
 				{
-					while (which_DsG4tau_extList < static_cast<int>(DsGlist.size()) && tau_g_it->DsG() > DsGlist[which_DsG4tau_extList])
+					while (which_DsG4tau_extList < static_cast<int>(DsGlist.size()) && tau_g_it->DsG() > DsGlist[which_DsG4tau_extList]) // if an avalanche is large, a tau_ext value can belong to multiple required DsG values
 					{
-						tau_exts[which_DsG4tau_extList].push_back(tau_g_it->tau_ext);
+						tau_exts[which_DsG4tau_extList].push_back(tau_g_it->tau_ext); // will added to which_DsG4tau_extList, which_DsG4tau_extList + 1, as long as tau_g_it->DsG() > DsGlist[which_DsG4tau_extList]
 						numof_avs[which_DsG4tau_extList].push_back(distance(tau_g_list.begin(), tau_g_it));
 						++which_DsG4tau_extList;
 					}
@@ -408,6 +416,7 @@ int main(int argc, char* argv[])
 				if (createPozStat || createExtraStat)
 				{
 					for (; (tauStatIntervalId + 1) * tauIncrAvStat() < tau_g_it->tau_ext; ++tauStatIntervalId);
+					for (; (DsGStatIntervalId + 1) * DsGIncrAvStat   < tau_g_it->DsG();   ++DsGStatIntervalId);
 					if (tauStatIntervalId < tauIntervalsAvStat())
 					{
 						if (tau_g_it->DG() >= 0)
@@ -417,6 +426,11 @@ int main(int argc, char* argv[])
 
 						av_poz_part[tauStatIntervalId].ifIncrAt(tau_g_it->av_size, 1);
 						av_neg_part[tauStatIntervalId].ifIncrAt(tau_g_it->av_size_n, 1);
+					}
+					if (DsGStatIntervalId < DsGIntervalsAvStat())
+					{
+						if (tau_g_it->DG() >= 0)
+							av_p_DsG[DsGStatIntervalId].ifIncrAt(tau_g_it->DG(), 1);
 					}
 				}
 
@@ -510,14 +524,15 @@ int main(int argc, char* argv[])
 
 	if (createPozStat)
 	{
-		size_stat_tofile(pars, av_p, tauIncrAvStat(), "# This file is a DG value histogram with positive values.\n", "_av_p");
+		size_stat_tofile(pars, av_p, tauIncrAvStat(), "# This file is a DG value histogram with positive values at tau_ext intervals.\n", "_av_p");
+		size_stat_tofile(pars, av_p_DsG, DsGIncrAvStat, "# This file is a DG value histogram with positive values at DsG intervals.\n", "_av_p_DsG");
 	}
 
 	if (createExtraStat())
 	{
-		size_stat_tofile(pars, av_n, tauIncrAvStat(), "# This file is a DG value histogram with negative values.\n", "_av_n");
-		size_stat_tofile(pars, av_poz_part, tauIncrAvStat(), "# This file is a av_size value histogram with positive values.\n", "_av_poz_part");
-		size_stat_tofile(pars, av_neg_part, tauIncrAvStat(), "# This file is a av_size_n value histogram with positive values.\n", "_av_neg_part");
+		size_stat_tofile(pars, av_n, tauIncrAvStat(), "# This file is a DG value histogram with negative values at tau_ext intervals.\n", "_av_n");
+		size_stat_tofile(pars, av_poz_part, tauIncrAvStat(), "# This file is a av_size value histogram with positive values at tau_ext intervals.\n", "_av_poz_part");
+		size_stat_tofile(pars, av_neg_part, tauIncrAvStat(), "# This file is a av_size_n value histogram with positive values at tau_ext intervals.\n", "_av_neg_part");
 	}
 
 	if (createAvAvsize)
